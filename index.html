@@ -147,7 +147,7 @@ textarea{min-height:80px;resize:vertical;line-height:1.55}
   border-top:1px solid var(--line);
   padding:8px 8px calc(8px + env(safe-area-inset-bottom));
 }
-.nav-inner{max-width:430px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.nav-inner{max-width:430px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
 .tab{
   border-radius:15px;
   padding:9px 4px;
@@ -315,6 +315,24 @@ textarea{min-height:80px;resize:vertical;line-height:1.55}
   margin-top:8px;
 }
 
+
+.calendarNav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0 10px}
+.calendarTitle{font-size:18px;font-weight:950;text-align:center;flex:1}
+.calendarGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.weekday{text-align:center;font-size:11px;font-weight:900;color:var(--muted);padding:4px 0}
+.dayCell{min-height:64px;border:1px solid var(--line);border-radius:14px;background:#fff;padding:6px 4px;position:relative;cursor:pointer;overflow:hidden}
+.dayCell.blank{background:transparent;border:0;cursor:default}
+.dayCell.today{background:var(--soft);border:2px solid var(--accent)}
+.dayCell.selected{outline:3px solid rgba(79,124,255,.25);border-color:var(--accent)}
+.dayNum{font-size:12px;font-weight:950;color:var(--ink);display:flex;justify-content:space-between;align-items:center;gap:2px}
+.todayLabel{font-size:9px;color:var(--accent);font-weight:950}
+.dayMarks{font-size:11px;line-height:1.25;margin-top:4px;color:var(--ink);font-weight:850}
+.dayMarks .doneMark{opacity:.45;text-decoration:line-through}
+.dayCount{font-size:10px;color:var(--muted);margin-top:2px;font-weight:800}
+.calendarDetails{margin-top:14px}
+.calendarMini{font-size:12px;color:var(--muted);line-height:1.55}
+.undatedList .cardItem{box-shadow:none}
+
 </style>
 </head>
 <body>
@@ -402,6 +420,26 @@ textarea{min-height:80px;resize:vertical;line-height:1.55}
   <div id="todayList"></div>
 </section>
 
+
+<section id="calendar" class="screen">
+  <div class="card">
+    <div class="section"><h2>月間カレンダー</h2><span class="badge blue">要注意だけ</span></div>
+    <p class="lead">登録済みの要注意カードが、月のどの日にあるかを見渡します。予定を直接登録するカレンダーではありません。</p>
+    <div class="calendarNav">
+      <button class="btn secondary" onclick="moveCalendarMonth(-1)">＜ 前月</button>
+      <div id="calendarTitle" class="calendarTitle"></div>
+      <button class="btn secondary" onclick="moveCalendarMonth(1)">翌月 ＞</button>
+    </div>
+    <button class="btn soft full" onclick="goCurrentMonth()">今月へ</button>
+    <div id="calendarGrid" class="calendarGrid" style="margin-top:12px"></div>
+  </div>
+  <div id="calendarDetails" class="calendarDetails"></div>
+  <div class="card undatedList">
+    <div class="section"><h2>日付未定の要注意</h2><span id="undatedCount" class="badge gray">0件</span></div>
+    <div id="undatedList"></div>
+  </div>
+</section>
+
 <section id="share" class="screen">
   <div class="card">
     <div class="section"><h2>アレクサに言うもの</h2><span class="badge purple">これから言う</span></div>
@@ -438,6 +476,7 @@ textarea{min-height:80px;resize:vertical;line-height:1.55}
     <div class="tab active" data-target="box"><strong>📁</strong>画像箱</div>
     <div class="tab" data-target="alerts"><strong>⚠️</strong>要注意</div>
     <div class="tab" data-target="today"><strong>☀️</strong>今日</div>
+    <div class="tab" data-target="calendar"><strong>📅</strong>カレンダー</div>
     <div class="tab" data-target="share"><strong>📣</strong>共有</div>
   </div>
 </nav>
@@ -549,6 +588,9 @@ textarea{min-height:80px;resize:vertical;line-height:1.55}
       <button id="savePickedBtn" class="btn full" onclick="savePickedItem()">この内容を保存</button>
       <button class="btn secondary full" onclick="manualResetPickForm()">入力をリセット</button>
     </div>
+    <div class="drawerBottomClose">
+      <button class="btn secondary full" onclick="closePickDrawer()">この画面を閉じる</button>
+    </div>
   </div>
 </div>
 
@@ -565,6 +607,10 @@ let pickSelected={
   alertAlexaStatus:'なし'
 };
 let currentFilter='all';
+const calendarToday=new Date();
+let calendarYear=calendarToday.getFullYear();
+let calendarMonth=calendarToday.getMonth();
+let selectedCalendarDate=dateKey(calendarToday);
 
 const $=id=>document.getElementById(id);
 
@@ -1198,10 +1244,147 @@ function debugLog(message, detail){
   try{ console.info('[にゃんぴょん要注意スケジュール]', message, detail||''); }catch(e){}
 }
 
+
+function pad2(n){return String(n).padStart(2,'0');}
+function dateKey(d){return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());}
+function addDays(d,days){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()+days);return x;}
+function isISODate(str){return /^\d{4}-\d{2}-\d{2}$/.test(String(str||''));}
+function calendarKeyForItem(item){
+  if(!item || item.mode!=='要注意')return null;
+  if(item.when==='今日')return dateKey(new Date());
+  if(item.when==='明日')return dateKey(addDays(new Date(),1));
+  if(isISODate(item.when))return item.when;
+  return null;
+}
+function calendarUndatedItems(){
+  return alertItems().filter(i=>!calendarKeyForItem(i));
+}
+function calendarItemsByDate(){
+  const map={};
+  alertItems().forEach(i=>{
+    const key=calendarKeyForItem(i);
+    if(!key)return;
+    if(!map[key])map[key]=[];
+    map[key].push(i);
+  });
+  return map;
+}
+function moveCalendarMonth(delta){
+  calendarMonth+=delta;
+  if(calendarMonth<0){calendarMonth=11;calendarYear--;}
+  if(calendarMonth>11){calendarMonth=0;calendarYear++;}
+  renderCalendar();
+}
+function goCurrentMonth(){
+  const now=new Date();
+  calendarYear=now.getFullYear();
+  calendarMonth=now.getMonth();
+  selectedCalendarDate=dateKey(now);
+  renderCalendar();
+}
+function selectCalendarDate(key){
+  selectedCalendarDate=key;
+  renderCalendar();
+}
+function markForCalendarItems(items){
+  if(!items||!items.length)return '';
+  const counts={長女:0,次女:0,ふたり:0,家族:0,other:0};
+  items.forEach(i=>{
+    if(i.person==='長女')counts.長女++;
+    else if(i.person==='次女')counts.次女++;
+    else if(i.person==='ふたり')counts.ふたり++;
+    else if(i.person==='家族')counts.家族++;
+    else counts.other++;
+  });
+  const anyDone=items.some(i=>i.done);
+  let lines=[];
+  if(counts.長女)lines.push('🐱'+counts.長女);
+  if(counts.次女)lines.push('🐰'+counts.次女);
+  if(counts.ふたり)lines.push('ふたり'+counts.ふたり);
+  if(counts.家族)lines.push('家族'+counts.家族);
+  if(counts.other)lines.push('他'+counts.other);
+  return '<div class="dayMarks '+(anyDone?'':'')+'">'+lines.join('<br>')+'</div><div class="dayCount">'+items.length+'件</div>';
+}
+function renderCalendar(){
+  const title=$('calendarTitle');
+  const grid=$('calendarGrid');
+  if(!title||!grid)return;
+  const todayKey=dateKey(new Date());
+  title.textContent=calendarYear+'年'+(calendarMonth+1)+'月';
+  const map=calendarItemsByDate();
+  const first=new Date(calendarYear,calendarMonth,1);
+  const last=new Date(calendarYear,calendarMonth+1,0);
+  const weekdays=['日','月','火','水','木','金','土'];
+  let html=weekdays.map(w=>'<div class="weekday">'+w+'</div>').join('');
+  for(let i=0;i<first.getDay();i++)html+='<div class="dayCell blank"></div>';
+  for(let day=1;day<=last.getDate();day++){
+    const d=new Date(calendarYear,calendarMonth,day);
+    const key=dateKey(d);
+    const items=map[key]||[];
+    const cls=['dayCell'];
+    if(key===todayKey)cls.push('today');
+    if(key===selectedCalendarDate)cls.push('selected');
+    html+=`<div class="${cls.join(' ')}" onclick="selectCalendarDate('${key}')">
+      <div class="dayNum"><span>${day}</span>${key===todayKey?'<span class="todayLabel">今日</span>':''}</div>
+      ${markForCalendarItems(items)}
+    </div>`;
+  }
+  grid.innerHTML=html;
+  renderCalendarDetails();
+  renderUndatedItems();
+}
+function renderCalendarDetails(){
+  const box=$('calendarDetails');
+  if(!box)return;
+  const map=calendarItemsByDate();
+  const items=map[selectedCalendarDate]||[];
+  const d=selectedCalendarDate ? new Date(selectedCalendarDate+'T00:00:00') : null;
+  const title=d ? (d.getMonth()+1)+'/'+d.getDate()+' の要注意' : '選択日の要注意';
+  if(!items.length){
+    box.innerHTML='<div class="card"><div class="section"><h2>'+title+'</h2></div><div class="empty">この日の要注意はありません。</div></div>';
+    return;
+  }
+  const sorted=[...items].sort((a,b)=>(a.done===b.done)?0:(a.done?1:-1));
+  box.innerHTML='<div class="card"><div class="section"><h2>'+title+'</h2><span class="badge orange">'+items.length+'件</span></div><div class="calendarMini">日付をタップすると詳細が切り替わります。</div></div>'+sorted.map(calendarCardHTML).join('');
+}
+function calendarCardHTML(item){
+  const img=getImage(item.sourceImageId);
+  const thumb=img&&img.image?'<img class="thumb" src="'+img.image+'" onclick="openImageModalById(\''+img.id+'\')">':'<div class="thumb none">画像なし</div>';
+  const tags=(item.actions||[]).map(a=>'<span class="tag">'+escapeHTML(a)+'</span>').join('');
+  const imageButton=img?`<button class="btn secondary" onclick="openImageModalById('${img.id}')">元画像を見る</button>`:'';
+  return `<div class="cardItem" style="${item.done?'opacity:.62':''}">
+    <div class="itemHead">
+      <div>
+        <div class="itemTitle">${personLabel(item.person)}：${escapeHTML(item.content)}</div>
+        <div class="meta">${escapeHTML(item.when)} / ${item.done?'完了':'未完了'}</div>
+      </div>
+      <span class="badge ${item.done?'green':'orange'}">${item.done?'完了':'未完了'}</span>
+    </div>
+    <div class="itemBody">${thumb}<div style="flex:1"><div class="tagline">${tags}</div><div class="tagline">${alexaBadge(item.alexaStatus)}</div></div></div>
+    <div class="actions"><button class="btn secondary" onclick="toggleDone('${item.id}')">${item.done?'未完了に戻す':'完了'}</button>${imageButton}</div>
+  </div>`;
+}
+function renderUndatedItems(){
+  const list=calendarUndatedItems();
+  const count=$('undatedCount');
+  const box=$('undatedList');
+  if(count)count.textContent=list.length+'件';
+  if(!box)return;
+  if(!list.length){box.innerHTML='<div class="empty">日付未定の要注意はありません。</div>';return;}
+  box.innerHTML=list.map(i=>{
+    const person=i.person?personLabel(i.person)+'：':'';
+    return `<div class="cardItem" style="${i.done?'opacity:.62':''}">
+      <div class="itemHead"><div><div class="itemTitle">${person}${escapeHTML(i.content)}</div><div class="meta">${escapeHTML(i.when||'日付未定')} / ${i.done?'完了':'未完了'}</div></div><span class="badge ${i.done?'green':'gray'}">${i.done?'完了':'日付未定'}</span></div>
+      <div class="actions"><button class="btn secondary" onclick="toggleDone('${i.id}')">${i.done?'未完了に戻す':'完了'}</button></div>
+    </div>`;
+  }).join('');
+}
+
 function renderAll(){
   renderImages();
   renderAlerts();
   renderToday();
+  renderCalendar();
   renderShare();
 }
 debugLog('app loaded');
