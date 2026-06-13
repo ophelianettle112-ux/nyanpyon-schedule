@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>にゃんぴょん要注意スケジュール</title>
+<style>
+:root{
+  --bg:#f6f7fb;
+  --card:#fff;
+  --ink:#263247;
+  --muted:#738097;
+  --line:#dfe5ef;
+  --accent:#4f7cff;
+  --accent2:#7b61ff;
+  --soft:#eef3ff;
+  --soft2:#f4f0ff;
+  --ok:#2fa866;
+  --oksoft:#eaf8f0;
+  --warn:#f39b35;
+  --warnsoft:#fff3e5;
+  --danger:#e45b5b;
+  --shadow:0 12px 28px rgba(38,50,71,.08);
+  --radius:18px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Hiragino Sans","Yu Gothic UI",sans-serif}
+body{padding-bottom:92px}
+.app{max-width:430px;margin:0 auto;min-height:100vh}
+header{
+  position:sticky;top:0;z-index:20;
+  background:rgba(246,247,251,.94);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(223,229,239,.8);
+  padding:14px 16px 10px;
+}
+.title{font-size:20px;font-weight:900;letter-spacing:.02em}
+.subtitle{font-size:12px;color:var(--muted);line-height:1.5;margin-top:4px}
+.screen{display:none;padding:16px}
+.screen.active{display:block}
+.card{
+  background:var(--card);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:16px;
+  margin-bottom:14px;
+}
+.section{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.section h2{font-size:18px;margin:0}
+.small{font-size:12px;color:var(--muted)}
+.lead{font-size:14px;color:var(--muted);line-height:1.6;margin:0 0 12px}
+label.caption{display:block;font-size:12px;font-weight:800;color:var(--muted);margin:12px 0 7px}
+.btn{
+  appearance:none;border:0;border-radius:15px;
+  padding:13px 15px;
+  font:inherit;font-weight:850;
+  background:var(--accent);color:#fff;
+  box-shadow:0 9px 18px rgba(79,124,255,.2);
+  cursor:pointer;
+}
+.btn.secondary{background:#fff;color:var(--ink);border:1px solid var(--line);box-shadow:none}
+.btn.soft{background:var(--soft2);color:var(--accent2);box-shadow:none}
+.btn.danger{background:#fff;color:var(--danger);border:1px solid #ffd5d5;box-shadow:none}
+.btn.full{width:100%}
+.btnrow{display:flex;gap:9px;flex-wrap:wrap}
+.segment,.chips{display:flex;gap:8px;flex-wrap:wrap}
+.seg,.chip{
+  border:1px solid var(--line);
+  background:#fff;
+  color:var(--ink);
+  border-radius:999px;
+  padding:9px 12px;
+  font-size:13px;
+  font-weight:800;
+  cursor:pointer;
+  user-select:none;
+}
+.seg.active,.chip.active{
+  background:var(--ink);
+  color:#fff;
+  border-color:var(--ink);
+}
+.choice3{display:grid;grid-template-columns:1fr;gap:9px}
+.bigchoice{
+  border:2px solid var(--line);
+  border-radius:18px;
+  padding:13px 12px;
+  background:#fff;
+  font-weight:900;
+  cursor:pointer;
+}
+.bigchoice span{display:block;font-size:12px;color:var(--muted);font-weight:650;margin-top:5px;line-height:1.45}
+.bigchoice.active.keep{border-color:var(--ok);background:var(--oksoft);color:var(--ok)}
+.bigchoice.active.alexa{border-color:var(--accent2);background:var(--soft2);color:var(--accent2)}
+.bigchoice.active.alert{border-color:var(--accent);background:var(--soft);color:var(--accent)}
+input[type="text"],input[type="date"],select,textarea{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:15px;
+  padding:12px 13px;
+  font:inherit;
+  background:#fff;
+  color:var(--ink);
+}
+textarea{min-height:80px;resize:vertical;line-height:1.55}
+.hidden{display:none!important}
+.fileInput{display:none}
+.preview{
+  border:1px dashed #bfc9da;
+  border-radius:18px;
+  background:linear-gradient(135deg,#f9fbff,#f3f0ff);
+  min-height:220px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  color:var(--muted);
+  text-align:center;
+  padding:14px;
+}
+.preview img{
+  width:100%;
+  max-height:360px;
+  object-fit:contain;
+  display:block;
+  border-radius:14px;
+}
+.note{
+  background:#fff8e7;
+  border:1px solid #ffe2a5;
+  border-radius:16px;
+  padding:12px;
+  font-size:13px;
+  line-height:1.6;
+}
+.toast{
+  position:fixed;left:50%;bottom:102px;transform:translateX(-50%);
+  background:var(--ink);color:#fff;border-radius:13px;
+  padding:10px 14px;font-size:13px;
+  opacity:0;pointer-events:none;transition:.2s;z-index:60;
+}
+.toast.show{opacity:1}
+.nav{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;
+  background:rgba(255,255,255,.96);
+  backdrop-filter:blur(10px);
+  border-top:1px solid var(--line);
+  padding:8px 8px calc(8px + env(safe-area-inset-bottom));
+}
+.nav-inner{max-width:430px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.tab{
+  border-radius:15px;
+  padding:9px 4px;
+  text-align:center;
+  color:var(--muted);
+  font-size:11px;
+  cursor:pointer;
+  user-select:none;
+}
+.tab strong{display:block;font-size:19px;margin-bottom:4px;line-height:1}
+.tab.active{background:var(--soft);color:var(--accent);font-weight:800}
+.cardItem{
+  border:1px solid var(--line);
+  background:#fff;
+  border-radius:18px;
+  padding:13px;
+  margin-bottom:12px;
+  box-shadow:0 8px 20px rgba(38,50,71,.05);
+}
+.itemHead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px}
+.itemTitle{font-size:16px;font-weight:900;line-height:1.35}
+.badge{
+  display:inline-flex;align-items:center;
+  padding:5px 9px;border-radius:999px;
+  font-size:11px;font-weight:900;white-space:nowrap;
+}
+.badge.blue{background:var(--soft);color:var(--accent)}
+.badge.green{background:var(--oksoft);color:var(--ok)}
+.badge.orange{background:var(--warnsoft);color:#c36d00}
+.badge.purple{background:var(--soft2);color:var(--accent2)}
+.badge.gray{background:#f1f3f6;color:var(--muted)}
+.meta{font-size:12px;color:var(--muted);line-height:1.55}
+.thumb{
+  width:76px;height:76px;object-fit:cover;border-radius:12px;border:1px solid var(--line);
+  background:#f3f5fa;flex:0 0 auto;
+}
+.thumb.none{display:flex;align-items:center;justify-content:center;font-size:10px;color:#8a94a8;text-align:center}
+.itemBody{display:flex;gap:11px;align-items:flex-start}
+.tagline{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tag{font-size:11px;border-radius:999px;background:#f1f4fa;color:#49566e;padding:4px 8px;font-weight:800}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.empty{
+  text-align:center;
+  color:var(--muted);
+  padding:28px 12px;
+  border:1px dashed #c9d2e1;
+  border-radius:18px;
+  background:#fff;
+  line-height:1.7;
+}
+.checkline{
+  display:flex;align-items:flex-start;gap:10px;
+  border:1px solid var(--line);border-radius:15px;
+  padding:12px;background:#fff;margin-bottom:9px;
+}
+.checkline input{width:20px;height:20px;accent-color:var(--accent);margin-top:2px}
+.checkline label{font-size:15px;line-height:1.45}
+.groupTitle{font-size:13px;font-weight:900;color:var(--muted);margin:16px 0 8px}
+.copyarea{
+  background:#fff;border:1px solid var(--line);border-radius:16px;padding:13px;
+  font-size:14px;line-height:1.7;white-space:pre-wrap;
+}
+.modal{
+  position:fixed;inset:0;background:rgba(10,18,32,.78);
+  display:none;align-items:center;justify-content:center;
+  z-index:80;padding:18px;
+}
+.modal.show{display:flex}
+.modal img{max-width:100%;max-height:88vh;border-radius:16px;background:#fff}
+.modalClose{position:fixed;top:14px;right:14px;background:#fff;color:var(--ink);border-radius:999px;border:0;padding:10px 13px;font-weight:900}
+.drawer{
+  position:fixed;inset:0;background:rgba(10,18,32,.45);z-index:70;
+  display:none;
+}
+.drawer.show{display:block}
+.drawerPanel{
+  position:absolute;left:0;right:0;bottom:0;max-height:92vh;overflow:auto;
+  max-width:430px;margin:0 auto;background:var(--bg);
+  border-radius:24px 24px 0 0;padding:16px 16px 28px;
+}
+.topImage{
+  border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#fff;
+  margin-bottom:12px;
+}
+.topImage img{width:100%;max-height:300px;object-fit:contain;display:block;background:#f8f9fc}
+
+.successBanner{
+  display:none;
+  position:sticky;
+  top:0;
+  z-index:5;
+  background:#dff7e8;
+  border:2px solid #7fd6a2;
+  color:#176b3a;
+  border-radius:18px;
+  padding:16px 14px;
+  margin:0 0 14px;
+  font-size:18px;
+  font-weight:950;
+  text-align:center;
+  box-shadow:0 10px 24px rgba(47,168,102,.18);
+}
+.successBanner.show{display:block}
+.successToastBig{
+  position:fixed;
+  left:50%;
+  top:42%;
+  transform:translate(-50%,-50%) scale(.96);
+  background:#1f7042;
+  color:#fff;
+  border-radius:22px;
+  padding:22px 26px;
+  font-size:22px;
+  font-weight:950;
+  z-index:120;
+  opacity:0;
+  pointer-events:none;
+  box-shadow:0 18px 40px rgba(20,40,30,.28);
+  transition:.18s;
+}
+.successToastBig.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+
+
+
+.personTag{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  vertical-align:middle;
+}
+.animalIcon{
+  width:23px;
+  height:23px;
+  display:inline-block;
+  flex:0 0 auto;
+  vertical-align:middle;
+}
+.animalText{vertical-align:middle;}
+.seg .personTag{gap:5px;}
+.seg .animalIcon{width:20px;height:20px;}
+.personOptionIcon{width:20px;height:20px;vertical-align:middle;margin-right:4px;}
+
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="title">にゃんぴょん要注意スケジュール</div>
+  <div class="subtitle">ねこ＝長女、うさぎ＝次女。画像箱にためて、必要なことだけ拾います。</div>
+</header>
+
+<main>
+<section id="box" class="screen active">
+  <div class="card">
+    <div class="section">
+      <h2>画像箱に追加</h2>
+      <span class="badge blue">入口</span>
+    </div>
+    <p class="lead">まずは月間表・金曜プリント・アプリ連絡などの画像を保存します。要注意は後から画像を見ながら拾います。</p>
+    <input id="imageInput" class="fileInput" type="file" accept="image/*">
+    <button class="btn full" onclick="document.getElementById('imageInput').click()">＋ 写真・スクショを追加</button>
+    <div id="imagePreview" class="preview" style="margin-top:12px;">画像を追加すると<br>ここに表示されます</div>
+    <div class="btnrow" style="margin-top:10px">
+      <button class="btn secondary" onclick="openImageModal(tempImage)">画像を拡大</button>
+      <button class="btn secondary" onclick="clearTempImage()">画像を外す</button>
+    </div>
+
+    <label class="caption">画像の種類</label>
+    <select id="imageType">
+      <option>長女 月間</option>
+      <option>次女 月間</option>
+      <option>長女 週間</option>
+      <option>アプリ連絡</option>
+      <option>個別おたより</option>
+      <option>その他</option>
+    </select>
+
+    <label class="caption">タイトル</label>
+    <input type="text" id="imageTitle" placeholder="例：長女 6/15週 金曜プリント">
+
+    <div class="btnrow" style="margin-top:14px">
+      <button class="btn full" onclick="saveImageCard()">画像箱に保存</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section">
+      <h2>画像なし登録</h2>
+      <span class="badge orange">口頭・メモ用</span>
+    </div>
+    <p class="lead">画像はないけど忘れたら困るものは、ここから要注意カードにできます。</p>
+    <button class="btn full" onclick="openNoImageAlert()">画像なしで要注意カードを作る</button>
+  </div>
+
+  <div class="card">
+    <div class="section">
+      <h2>保存済み画像</h2>
+      <span id="imageCount" class="badge gray">0件</span>
+    </div>
+    <div id="imageList"></div>
+  </div>
+</section>
+
+<section id="alerts" class="screen">
+  <div class="card">
+    <div class="section">
+      <h2>要注意一覧</h2>
+      <span id="alertCount" class="badge orange">0件</span>
+    </div>
+    <div class="chips" id="filterChips">
+      <button class="chip active" data-filter="all">全件</button>
+      <button class="chip" data-filter="open">未完了</button>
+      <button class="chip" data-filter="done">完了</button>
+      <button class="chip" data-filter="長女">長女</button>
+      <button class="chip" data-filter="次女">次女</button>
+      <button class="chip" data-filter="alexa">これから言う</button>
+    </div>
+  </div>
+  <div id="alertsList"></div>
+</section>
+
+<section id="today" class="screen">
+  <div class="card">
+    <div class="section"><h2>今日・明日の確認</h2><span class="badge blue">朝に見る</span></div>
+    <p class="lead">「今日」「明日」の要注意だけを表示します。チェックしても消えず、「今日確認済み」になります。</p>
+  </div>
+  <div id="todayList"></div>
+</section>
+
+<section id="share" class="screen">
+  <div class="card">
+    <div class="section"><h2>アレクサに言うもの</h2><span class="badge purple">これから言う</span></div>
+    <div id="alexaCheckList"></div>
+  </div>
+
+  <div class="card">
+    <div class="section"><h2>父共有用</h2><span class="badge green">コピー可</span></div>
+    <div id="dadShareText" class="copyarea">父共有に入れる内容はまだありません。</div>
+    <div class="btnrow" style="margin-top:12px">
+      <button class="btn secondary" onclick="copyDadShare()">父共有文をコピー</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section"><h2>バックアップ・整理</h2></div>
+    <div class="btnrow">
+      <button class="btn secondary" onclick="exportJSON()">JSON書き出し</button>
+      <button class="btn secondary" onclick="document.getElementById('importFile').click()">JSON読み込み</button>
+    </div>
+    <input id="importFile" class="fileInput" type="file" accept=".json,application/json">
+    <div class="note" style="margin-top:12px">画像だけ削除すると、拾った内容や完了状態は残ります。容量が重くなった時に使います。</div>
+    <div class="btnrow" style="margin-top:12px">
+      <button class="btn secondary" onclick="removeDoneImages()">完了済みの画像だけ削除</button>
+      <button class="btn secondary" onclick="removeKeepImages()">見るだけ保存の画像だけ削除</button>
+    </div>
+  </div>
+</section>
+</main>
+</div>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="tab active" data-target="box"><strong>📁</strong>画像箱</div>
+    <div class="tab" data-target="alerts"><strong>⚠️</strong>要注意</div>
+    <div class="tab" data-target="today"><strong>☀️</strong>今日</div>
+    <div class="tab" data-target="share"><strong>📣</strong>共有</div>
+  </div>
+</nav>
+
+<div id="toast" class="toast"></div>
+<div id="successToastBig" class="successToastBig">登録しました！</div>
+
+<div id="imageModal" class="modal" onclick="closeImageModal()">
+  <button class="modalClose">閉じる</button>
+  <img id="modalImg" alt="">
+</div>
+
+<div id="pickDrawer" class="drawer">
+  <div class="drawerPanel">
+    <div class="section">
+      <h2>この画像から拾う</h2>
+      <button class="btn secondary" onclick="closePickDrawer()">閉じる</button>
+    </div>
+    <div id="pickSourceInfo" class="small" style="margin-bottom:10px"></div>
+    <div id="pickSavedMessage" class="successBanner">登録しました！</div>
+    <div id="pickImageWrap" class="topImage"></div>
+
+    <div id="pickModeChooser">
+      <label class="caption">この内容はどうする？</label>
+      <div class="choice3">
+      <div id="pickKeep" class="bigchoice keep" onclick="setPickMode('見るだけ')">見るだけ<span>親の行動は変わらない。保存だけ。</span></div>
+      <div id="pickAlexa" class="bigchoice alexa" onclick="setPickMode('Alexaだけ')">アレクサだけ<span>思い出せればOK。要注意にはしない。</span></div>
+      <div id="pickAlert" class="bigchoice active alert" onclick="setPickMode('要注意')">要注意<span>今日確認・父共有・完了管理したい。</span></div>
+      </div>
+    </div>
+
+    <div id="keepFields" class="hidden">
+      <label class="caption">見るだけメモ（任意）</label>
+      <input type="text" id="keepContent" placeholder="例：ポニー来校。親の準備なし。">
+    </div>
+
+    <div id="alexaFields" class="hidden">
+      <label class="caption">アレクサに言う内容</label>
+      <textarea id="alexaContent" placeholder="例：金曜に上履きを洗う"></textarea>
+      <label class="caption">アレクサ状態</label>
+      <div class="segment" data-pick-field="alexaOnlyStatus">
+        <button class="seg active" data-value="未登録">これから言う</button>
+        <button class="seg" data-value="登録済み">もう言った</button>
+      </div>
+      <div class="note" style="margin-top:12px">アレクサには自分で言います。このツールでは「これから言う／もう言った」だけ管理します。</div>
+    </div>
+
+    <div id="alertFields">
+      <label class="caption">誰の情報？</label>
+      <div class="segment" data-pick-field="person">
+        <button class="seg active" data-value="長女"><span class="personTag"><svg class="animalIcon" viewBox="0 0 64 64" aria-hidden="true"><path d="M17 21 L8 8 L10 28" fill="#f6d6b8" stroke="#6b5a52" stroke-width="2"/><path d="M47 21 L56 8 L54 28" fill="#f6d6b8" stroke="#6b5a52" stroke-width="2"/><circle cx="32" cy="35" r="22" fill="#f6d6b8" stroke="#6b5a52" stroke-width="2"/><circle cx="24" cy="32" r="2.5" fill="#6b5a52"/><circle cx="40" cy="32" r="2.5" fill="#6b5a52"/><path d="M29 40 Q32 43 35 40" fill="none" stroke="#6b5a52" stroke-width="2.5" stroke-linecap="round"/><path d="M18 38 H8 M18 41 H8 M46 38 H56 M46 41 H56" stroke="#6b5a52" stroke-width="2" stroke-linecap="round"/><path d="M30 36 L32 38 L34 36" fill="#e58c8c"/></svg><span class="animalText">長女</span></span></button>
+        <button class="seg" data-value="次女"><span class="personTag"><svg class="animalIcon" viewBox="0 0 64 64" aria-hidden="true"><ellipse cx="24" cy="15" rx="7" ry="16" fill="#fff" stroke="#8a8fa3" stroke-width="2"/><ellipse cx="40" cy="15" rx="7" ry="16" fill="#fff" stroke="#8a8fa3" stroke-width="2"/><ellipse cx="24" cy="16" rx="3" ry="10" fill="#f2c7d8"/><ellipse cx="40" cy="16" rx="3" ry="10" fill="#f2c7d8"/><circle cx="32" cy="39" r="20" fill="#fff" stroke="#8a8fa3" stroke-width="2"/><circle cx="25" cy="37" r="2.5" fill="#6b6f80"/><circle cx="39" cy="37" r="2.5" fill="#6b6f80"/><path d="M28 45 Q32 48 36 45" fill="none" stroke="#6b6f80" stroke-width="2.5" stroke-linecap="round"/><circle cx="32" cy="42" r="2.8" fill="#e9a5ba"/></svg><span class="animalText">次女</span></span></button>
+        <button class="seg" data-value="ふたり">ふたり</button>
+        <button class="seg" data-value="家族">家族</button>
+      </div>
+
+      <label class="caption">いつ必要？</label>
+      <div class="segment" data-pick-field="when">
+        <button class="seg" data-value="今日">今日</button>
+        <button class="seg active" data-value="明日">明日</button>
+        <button class="seg" data-value="日付指定">日付指定</button>
+        <button class="seg" data-value="期限あり">期限あり</button>
+        <button class="seg" data-value="今週">今週</button>
+        <button class="seg" data-value="いつか">いつか</button>
+      </div>
+      <div id="dateWrap" class="hidden">
+        <label class="caption">日付指定</label>
+        <input type="date" id="dateValue">
+      </div>
+
+      <label class="caption">親アクション種別</label>
+      <div class="chips" id="actionChips">
+        <button class="chip" data-value="持ち物">持ち物</button>
+        <button class="chip" data-value="提出物">提出物</button>
+        <button class="chip" data-value="親の記入">親の記入</button>
+        <button class="chip" data-value="親の入力">親の入力</button>
+        <button class="chip" data-value="服装">服装</button>
+        <button class="chip" data-value="時間変更">時間変更</button>
+        <button class="chip" data-value="給食なし/弁当">給食なし/弁当</button>
+        <button class="chip" data-value="お金">お金</button>
+        <button class="chip" data-value="父共有">父共有</button>
+      </div>
+
+      <label class="caption">要注意の中身</label>
+      <textarea id="alertContent" placeholder="例：プールカード、すいえいバッグ（画像だけで分かるなら空欄OK）"></textarea>
+      <div class="small" style="margin-top:6px">画像ありなら空欄でも保存できます。空欄の場合は「元画像を確認」と表示されます。画像なし登録の場合は内容を書いてください。</div>
+
+      <label class="caption">父に頼むこと（任意）</label>
+      <input type="text" id="dadTask" placeholder="例：月曜朝にプールカードが入っているか確認">
+
+      <label class="caption">アレクサ</label>
+      <div class="segment" data-pick-field="alertAlexaStatus">
+        <button class="seg active" data-value="なし">アレクサに言わない</button>
+        <button class="seg" data-value="未登録">これから言う</button>
+        <button class="seg" data-value="登録済み">もう言った</button>
+      </div>
+    </div>
+
+    <div class="btnrow" style="margin-top:16px">
+      <button id="savePickedBtn" class="btn full" onclick="savePickedItem()">この内容を保存</button>
+      <button class="btn secondary full" onclick="resetPickForm()">入力をリセット</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY='kodomo_yochui_lite_v5';
+let data={images:[],items:[]};
+let tempImage='';
+let activeImageId=null;
+let pickMode='要注意';
+let pickSelected={
+  person:'長女',
+  when:'明日',
+  alexaOnlyStatus:'未登録',
+  alertAlexaStatus:'なし'
+};
+let currentFilter='all';
+
+const $=id=>document.getElementById(id);
+
+function load(){
+  try{
+    data=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{"images":[],"items":[]}');
+    if(!data.images)data.images=[];
+    if(!data.items)data.items=[];
+  }catch(e){data={images:[],items:[]};}
+  renderAll();
+}
+function save(){
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+}
+function toast(msg){
+  const t=$('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  clearTimeout(window.toastTimer);
+  window.toastTimer=setTimeout(()=>t.classList.remove('show'),1800);
+}
+function escapeHTML(str){
+  return String(str||'').replace(/[&<>"']/g,s=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[s]));
+}
+function formatDate(iso){
+  if(!iso)return '';
+  const d=new Date(iso);
+  return (d.getMonth()+1)+'/'+d.getDate();
+}
+function switchTab(target){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $(target).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.target===target));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.querySelectorAll('.tab').forEach(tab=>tab.addEventListener('click',()=>switchTab(tab.dataset.target)));
+
+$('imageInput').addEventListener('change',e=>{
+  const file=e.target.files[0];
+  if(!file)return;
+  imageFileToDataURL(file).then(dataUrl=>{
+    tempImage=dataUrl;
+    renderTempPreview();
+    toast('画像を読み込みました');
+  }).catch(()=>{
+    toast('画像の読み込みに失敗しました');
+  });
+});
+$('importFile').addEventListener('change',e=>{
+  const file=e.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const imported=JSON.parse(reader.result);
+      if(!imported.images||!imported.items)throw new Error('invalid');
+      data=imported;
+      save();renderAll();toast('JSONを読み込みました');
+    }catch(err){toast('読み込みに失敗しました');}
+  };
+  reader.readAsText(file);
+});
+
+document.querySelectorAll('.segment').forEach(seg=>{
+  seg.addEventListener('click',e=>{
+    const btn=e.target.closest('.seg');
+    if(!btn)return;
+    seg.querySelectorAll('.seg').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const field=seg.dataset.pickField;
+    if(field){
+      pickSelected[field]=btn.dataset.value;
+      if(field==='when')$('dateWrap').classList.toggle('hidden',btn.dataset.value!=='日付指定');
+    }
+  });
+});
+$('actionChips').addEventListener('click',e=>{
+  const btn=e.target.closest('.chip');
+  if(!btn)return;
+  btn.classList.toggle('active');
+});
+$('filterChips').addEventListener('click',e=>{
+  const btn=e.target.closest('.chip');
+  if(!btn)return;
+  $('filterChips').querySelectorAll('.chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  currentFilter=btn.dataset.filter;
+  renderAlerts();
+});
+
+function renderTempPreview(){
+  $('imagePreview').innerHTML=tempImage?'<img src="'+tempImage+'" alt="preview">':'画像を追加すると<br>ここに表示されます';
+}
+function clearTempImage(){
+  tempImage='';
+  $('imageInput').value='';
+  renderTempPreview();
+}
+function openImageModal(src){
+  if(!src){toast('画像がありません');return;}
+  $('modalImg').src=src;
+  $('imageModal').classList.add('show');
+}
+function closeImageModal(){
+  $('imageModal').classList.remove('show');
+}
+function saveImageCard(){
+  if(!tempImage){toast('画像を追加してください');return;}
+  const title=$('imageTitle').value.trim()||$('imageType').value+' '+formatDate(new Date().toISOString());
+  const img={
+    id:makeId(),
+    image:tempImage,
+    type:$('imageType').value,
+    title,
+    createdAt:new Date().toISOString(),
+    itemIds:[]
+  };
+  data.images.unshift(img);
+  try{
+    save();
+  }catch(e){
+    data.images.shift();
+    toast('保存容量が足りない可能性があります。古い画像を削除してください。');
+    return;
+  }
+  clearTempImage();
+  $('imageTitle').value='';
+  renderAll();
+  toast('画像箱に保存しました');
+}
+function makeId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+
+function imageFileToDataURL(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const img=new Image();
+      img.onload=()=>{
+        const maxSide=1400;
+        let w=img.width;
+        let h=img.height;
+        if(Math.max(w,h)>maxSide){
+          const scale=maxSide/Math.max(w,h);
+          w=Math.round(w*scale);
+          h=Math.round(h*scale);
+        }
+        const canvas=document.createElement('canvas');
+        canvas.width=w;
+        canvas.height=h;
+        const ctx=canvas.getContext('2d');
+        ctx.drawImage(img,0,0,w,h);
+        resolve(canvas.toDataURL('image/jpeg',0.78));
+      };
+      img.onerror=reject;
+      img.src=reader.result;
+    };
+    reader.onerror=reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function imageStatus(img){
+  const items=data.items.filter(i=>i.sourceImageId===img.id);
+  if(!items.length)return '未処理';
+  const hasAlert=items.some(i=>i.mode==='要注意');
+  const hasAlexa=items.some(i=>i.mode==='Alexaだけ');
+  const hasKeep=items.some(i=>i.mode==='見るだけ');
+  if(hasAlert)return '要注意あり';
+  if(hasAlexa)return 'アレクサだけあり';
+  if(hasKeep)return '見るだけ';
+  return '拾い済み';
+}
+function imageStatusBadge(status){
+  if(status==='未処理')return '<span class="badge gray">未処理</span>';
+  if(status==='要注意あり')return '<span class="badge orange">要注意あり</span>';
+  if(status==='アレクサだけあり')return '<span class="badge purple">アレクサだけあり</span>';
+  if(status==='見るだけ')return '<span class="badge green">見るだけ</span>';
+  return '<span class="badge blue">拾い済み</span>';
+}
+function renderImages(){
+  $('imageCount').textContent=data.images.length+'件';
+  if(!data.images.length){
+    $('imageList').innerHTML='<div class="empty">画像はまだありません。<br>まずは写真・スクショを追加します。</div>';
+    return;
+  }
+  $('imageList').innerHTML=data.images.map(img=>{
+    const count=data.items.filter(i=>i.sourceImageId===img.id).length;
+    const status=imageStatus(img);
+    const thumb=img.image?'<img class="thumb" src="'+img.image+'" onclick="openImageModalById(\''+img.id+'\')">':'<div class="thumb none">画像なし</div>';
+    return `<div class="cardItem">
+      <div class="itemHead">
+        <div>
+          <div class="itemTitle">${escapeHTML(img.title)}</div>
+          <div class="meta">${escapeHTML(img.type)} / ${formatDate(img.createdAt)} / 拾った項目 ${count}件</div>
+        </div>
+        ${imageStatusBadge(status)}
+      </div>
+      <div class="itemBody">
+        ${thumb}
+        <div style="flex:1">
+          <div class="meta">この画像から必要な内容だけ拾います。</div>
+          <div class="actions">
+            <button class="btn secondary" onclick="openImageModalById('${img.id}')">画像を見る</button>
+            <button class="btn" onclick="openPickDrawer('${img.id}')">この画像から拾う</button>
+            <button class="btn secondary" onclick="removeImageData('${img.id}')">画像だけ削除</button>
+            <button class="btn danger" onclick="deleteImageCard('${img.id}')">画像カード削除</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function openImageModalById(id){
+  const img=data.images.find(x=>x.id===id);
+  if(img)openImageModal(img.image);
+}
+function removeImageData(id){
+  const img=data.images.find(x=>x.id===id);
+  if(!img)return;
+  if(!img.image){toast('画像はありません');return;}
+  if(!confirm('画像だけ削除しますか？\\n拾った項目は残ります。'))return;
+  img.image='';
+  save();renderAll();toast('画像だけ削除しました');
+}
+function deleteImageCard(id){
+  const related=data.items.filter(i=>i.sourceImageId===id).length;
+  const msg=related?'この画像カードと、この画像から拾った項目 '+related+'件も削除しますか？':'画像カードを削除しますか？';
+  if(!confirm(msg))return;
+  data.images=data.images.filter(x=>x.id!==id);
+  data.items=data.items.filter(i=>i.sourceImageId!==id);
+  save();renderAll();toast('削除しました');
+}
+
+function openPickDrawer(id){
+  activeImageId=id;
+  const img=data.images.find(x=>x.id===id);
+  if(!img)return;
+  $('pickSourceInfo').textContent=img.title+' / '+img.type;
+  $('pickImageWrap').innerHTML=img.image?'<img src="'+img.image+'" onclick="openImageModalById(\''+img.id+'\')">':'<div class="preview" style="min-height:120px">画像なし</div>';
+  resetPickForm();
+  setNoImageMode(false);
+  const msg=$('pickSavedMessage');
+  if(msg)msg.classList.remove('show');
+  $('pickDrawer').classList.add('show');
+}
+function openNoImageAlert(){
+  activeImageId=null;
+  $('pickSourceInfo').textContent='画像なしの要注意カード';
+  $('pickImageWrap').innerHTML='<div class="preview" style="min-height:120px">画像なしで登録します</div>';
+  resetPickForm();
+  setPickMode('要注意');
+  setNoImageMode(true);
+  const msg=$('pickSavedMessage');
+  if(msg)msg.classList.remove('show');
+  $('pickDrawer').classList.add('show');
+}
+function closePickDrawer(){
+  $('pickDrawer').classList.remove('show');
+}
+function setNoImageMode(isNoImage){
+  const chooser=$('pickModeChooser');
+  if(chooser)chooser.classList.toggle('hidden',!!isNoImage);
+  const source=$('pickSourceInfo');
+  if(source && isNoImage)source.textContent='画像なしの要注意カード';
+}
+function showPickSavedMessage(){
+  const box=$('pickSavedMessage');
+  if(box){
+    box.textContent='登録しました！';
+    box.classList.add('show');
+  }
+  const big=$('successToastBig');
+  if(big){
+    big.classList.add('show');
+    clearTimeout(window.successBigTimer);
+    window.successBigTimer=setTimeout(()=>big.classList.remove('show'),1300);
+  }
+  const btn=$('savePickedBtn');
+  if(btn){
+    const old=btn.textContent;
+    btn.textContent='登録しました！';
+    btn.disabled=true;
+    clearTimeout(window.saveBtnTimer);
+    window.saveBtnTimer=setTimeout(()=>{
+      btn.textContent=old||'この内容を保存';
+      btn.disabled=false;
+      if(box)box.classList.remove('show');
+    },1800);
+  }else{
+    clearTimeout(window.pickSavedTimer);
+    window.pickSavedTimer=setTimeout(()=>box&&box.classList.remove('show'),1800);
+  }
+}
+function setPickMode(mode){
+  pickMode=mode;
+  $('pickKeep').classList.toggle('active',mode==='見るだけ');
+  $('pickAlexa').classList.toggle('active',mode==='Alexaだけ');
+  $('pickAlert').classList.toggle('active',mode==='要注意');
+  $('keepFields').classList.toggle('hidden',mode!=='見るだけ');
+  $('alexaFields').classList.toggle('hidden',mode!=='Alexaだけ');
+  $('alertFields').classList.toggle('hidden',mode!=='要注意');
+}
+function resetPickForm(){
+  pickMode='要注意';
+  setPickMode('要注意');
+  pickSelected={person:'長女',when:'明日',alexaOnlyStatus:'未登録',alertAlexaStatus:'なし'};
+  $('keepContent').value='';
+  $('alexaContent').value='';
+  $('alertContent').value='';
+  $('dadTask').value='';
+  $('dateValue').value='';
+  $('dateWrap').classList.add('hidden');
+  document.querySelectorAll('#pickDrawer .segment').forEach(seg=>{
+    const field=seg.dataset.pickField;
+    seg.querySelectorAll('.seg').forEach(b=>b.classList.remove('active'));
+    const defaults={person:'長女',when:'明日',alexaOnlyStatus:'未登録',alertAlexaStatus:'なし'};
+    const btn=seg.querySelector('[data-value="'+defaults[field]+'"]')||seg.querySelector('.seg');
+    if(btn)btn.classList.add('active');
+  });
+  document.querySelectorAll('#actionChips .chip').forEach(c=>c.classList.remove('active'));
+  const btn=$('savePickedBtn');
+  if(btn){btn.textContent='この内容を保存';btn.disabled=false;}
+}
+function getActions(){
+  return Array.from($('actionChips').querySelectorAll('.chip.active')).map(c=>c.dataset.value);
+}
+function getWhen(){
+  if(pickSelected.when==='日付指定' && $('dateValue').value)return $('dateValue').value;
+  return pickSelected.when;
+}
+function savePickedItem(){
+  if(!activeImageId && pickMode!=='要注意'){toast('画像なし登録は要注意のみです');return;}
+  let item={
+    id:makeId(),
+    sourceImageId:activeImageId,
+    mode:pickMode,
+    person:'',
+    when:'',
+    actions:[],
+    content:'',
+    dadTask:'',
+    alexaStatus:'なし',
+    done:false,
+    todayChecked:false,
+    createdAt:new Date().toISOString()
+  };
+  if(pickMode==='見るだけ'){
+    item.content=$('keepContent').value.trim()||'見るだけ';
+    item.alexaStatus='なし';
+  }else if(pickMode==='Alexaだけ'){
+    const content=$('alexaContent').value.trim();
+    if(!content){toast('アレクサに言う内容を入れてください');return;}
+    item.content=content;
+    item.alexaStatus=pickSelected.alexaOnlyStatus;
+  }else{
+    let content=$('alertContent').value.trim();
+    if(!content && !activeImageId){toast('画像なし登録では、要注意の中身を入れてください');return;}
+    if(!content && activeImageId){content='元画像を確認';}
+    item.person=pickSelected.person;
+    item.when=getWhen();
+    item.actions=getActions();
+    item.content=content;
+    item.dadTask=$('dadTask').value.trim();
+    item.alexaStatus=pickSelected.alertAlexaStatus;
+  }
+  data.items.unshift(item);
+  const img=data.images.find(x=>x.id===activeImageId);
+  if(img && !img.itemIds.includes(item.id))img.itemIds.push(item.id);
+  save();renderAll();resetPickForm();showPickSavedMessage();toast('登録しました！');debugLog('picked item saved', item);
+}
+
+function alertItems(){
+  return data.items.filter(i=>i.mode==='要注意');
+}
+function getImage(id){return data.images.find(x=>x.id===id);}
+function renderAlerts(){
+  let list=alertItems();
+  if(currentFilter==='open')list=list.filter(i=>!i.done);
+  else if(currentFilter==='done')list=list.filter(i=>i.done);
+  else if(currentFilter==='長女'||currentFilter==='次女')list=list.filter(i=>i.person===currentFilter);
+  else if(currentFilter==='alexa')list=list.filter(i=>i.alexaStatus==='未登録');
+  $('alertCount').textContent=alertItems().length+'件';
+  if(!list.length){
+    $('alertsList').innerHTML='<div class="empty">要注意はまだありません。<br>画像箱から「この画像から拾う」で追加できます。</div>';
+    return;
+  }
+  $('alertsList').innerHTML=list.map(alertCardHTML).join('');
+}
+function alexaBadge(status){
+  if(status==='登録済み')return '<span class="badge green">もう言った</span>';
+  if(status==='未登録')return '<span class="badge orange">これから言う</span>';
+  return '<span class="badge gray">言わない</span>';
+}
+function alertCardHTML(item){
+  const img=getImage(item.sourceImageId);
+  const thumb=img&&img.image?'<img class="thumb" src="'+img.image+'" onclick="openImageModalById(\''+img.id+'\')">':'<div class="thumb none">画像なし</div>';
+  const tags=(item.actions||[]).map(a=>'<span class="tag">'+escapeHTML(a)+'</span>').join('');
+  const dad=item.dadTask||item.actions.includes('父共有')?'<span class="badge green">父共有</span>':'';
+  const alexaButton=item.alexaStatus==='未登録'?`<button class="btn secondary" onclick="markAlexaDone('${item.id}')">もう言った</button>`:'';
+  const imageButton=img?`<button class="btn secondary" onclick="openImageModalById('${img.id}')">元画像を見る</button>`:'';
+  return `<div class="cardItem">
+    <div class="itemHead">
+      <div>
+        <div class="itemTitle">${personLabel(item.person)}：${escapeHTML(item.content)}</div>
+        <div class="meta">${escapeHTML(item.when)} / ${img?escapeHTML(img.title):'元画像なし'} / ${item.done?'完了':'未完了'}</div>
+      </div>
+      <span class="badge ${item.done?'green':'orange'}">${item.done?'完了':'未完了'}</span>
+    </div>
+    <div class="itemBody">
+      ${thumb}
+      <div style="flex:1">
+        <div class="tagline">${tags}</div>
+        <div class="tagline">${alexaBadge(item.alexaStatus)}${dad}</div>
+        ${item.dadTask?'<div class="meta" style="margin-top:7px">父：'+escapeHTML(item.dadTask)+'</div>':''}
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn secondary" onclick="toggleDone('${item.id}')">${item.done?'未完了に戻す':'完了'}</button>
+      ${alexaButton}
+      <button class="btn secondary" onclick="editItem('${item.id}')">編集</button>
+      <button class="btn danger" onclick="deleteItem('${item.id}')">削除</button>
+      ${imageButton}
+    </div>
+  </div>`;
+}
+function toggleDone(id){
+  const item=data.items.find(i=>i.id===id);
+  if(item){item.done=!item.done;save();renderAll();}
+}
+function markAlexaDone(id){
+  const item=data.items.find(i=>i.id===id);
+  if(item){item.alexaStatus='登録済み';save();renderAll();toast('もう言ったにしました');}
+}
+function deleteItem(id){
+  if(!confirm('削除しますか？'))return;
+  data.items=data.items.filter(i=>i.id!==id);
+  data.images.forEach(img=>img.itemIds=(img.itemIds||[]).filter(x=>x!==id));
+  save();renderAll();toast('削除しました');
+}
+function editItem(id){
+  const item=data.items.find(i=>i.id===id);
+  if(!item)return;
+  activeImageId=item.sourceImageId||null;
+  if(activeImageId){openPickDrawer(activeImageId);}else{openNoImageAlert();}
+  setPickMode(item.mode);
+  if(item.mode==='見るだけ')$('keepContent').value=item.content;
+  if(item.mode==='Alexaだけ'){
+    $('alexaContent').value=item.content;
+    pickSelected.alexaOnlyStatus=item.alexaStatus;
+    setSegment('alexaOnlyStatus',item.alexaStatus);
+  }
+  if(item.mode==='要注意'){
+    pickSelected.person=item.person; setSegment('person',item.person);
+    pickSelected.when=item.when; 
+    if(['今日','明日','期限あり','今週','いつか'].includes(item.when)){setSegment('when',item.when);}
+    else {setSegment('when','日付指定');$('dateWrap').classList.remove('hidden');$('dateValue').value=item.when;}
+    $('alertContent').value=item.content;
+    $('dadTask').value=item.dadTask||'';
+    pickSelected.alertAlexaStatus=item.alexaStatus; setSegment('alertAlexaStatus',item.alexaStatus);
+    document.querySelectorAll('#actionChips .chip').forEach(c=>c.classList.toggle('active',(item.actions||[]).includes(c.dataset.value)));
+  }
+  deleteItemWithoutConfirm(id);
+  toast('編集用に開きました');
+}
+function setSegment(field,value){
+  const seg=document.querySelector('[data-pick-field="'+field+'"]');
+  if(!seg)return;
+  seg.querySelectorAll('.seg').forEach(b=>b.classList.toggle('active',b.dataset.value===value));
+}
+function deleteItemWithoutConfirm(id){
+  data.items=data.items.filter(i=>i.id!==id);
+  data.images.forEach(img=>img.itemIds=(img.itemIds||[]).filter(x=>x!==id));
+  save();renderAll();
+}
+
+function renderToday(){
+  const list=alertItems().filter(i=>!i.done && (i.when==='今日'||i.when==='明日'));
+  if(!list.length){
+    $('todayList').innerHTML='<div class="empty">今日・明日の要注意はありません。</div>';
+    return;
+  }
+  const groups={長女:[],次女:[],ふたり:[],家族:[],親がやること:[]};
+  list.forEach(i=>{
+    if(groups[i.person])groups[i.person].push(i);
+    if(i.actions.includes('提出物')||i.actions.includes('親の記入')||i.actions.includes('親の入力'))groups['親がやること'].push(i);
+  });
+  let html='';
+  Object.keys(groups).forEach(g=>{
+    if(!groups[g].length)return;
+    const heading=(g==='長女'||g==='次女')?personLabel(g):escapeHTML(g);
+    html+='<div class="card"><div class="groupTitle">'+heading+'</div>';
+    groups[g].forEach(i=>{
+      const img=getImage(i.sourceImageId);
+      const thumb=img&&img.image?'<img class="thumb" src="'+img.image+'" onclick="openImageModalById(\''+img.id+'\')" style="width:48px;height:48px;margin-right:8px">':'';
+      html+=`<div class="checkline">
+        <input type="checkbox" ${i.todayChecked?'checked':''} onchange="toggleTodayChecked('${i.id}',this.checked)">
+        <label>${thumb}<strong>${escapeHTML(i.content)}</strong><span class="sub">${i.todayChecked?'今日確認済み / ':''}${escapeHTML(i.when)}</span></label>
+      </div>`;
+    });
+    html+='</div>';
+  });
+  $('todayList').innerHTML=html;
+}
+function toggleTodayChecked(id,checked){
+  const item=data.items.find(i=>i.id===id);
+  if(item){item.todayChecked=!!checked;save();renderToday();}
+}
+
+function renderShare(){
+  const alexaItems=data.items.filter(i=>!i.done && i.alexaStatus==='未登録' && (i.mode==='Alexaだけ'||i.mode==='要注意'));
+  if(!alexaItems.length){
+    $('alexaCheckList').innerHTML='<div class="empty">これから言うのものはありません。</div>';
+  }else{
+    $('alexaCheckList').innerHTML=alexaItems.map(i=>`
+      <div class="cardItem">
+        <div class="itemTitle">${i.person?personLabel(i.person)+'：':''}${escapeHTML(i.content)}</div>
+        <div class="meta">${i.mode} / ${escapeHTML(i.when||'')}</div>
+        <div class="actions"><button class="btn secondary" onclick="markAlexaDone('${i.id}')">もう言ったにする</button></div>
+      </div>`).join('');
+  }
+
+  const dadItems=alertItems().filter(i=>!i.done && (i.actions.includes('父共有')||i.dadTask));
+  if(!dadItems.length){
+    $('dadShareText').textContent='父共有に入れる内容はまだありません。';
+  }else{
+    const lines=['【子ども共有】'];
+    dadItems.forEach(i=>{
+      lines.push(`${i.when} ${i.person}：${i.content}${i.dadTask?' / お願い：'+i.dadTask:''}`);
+    });
+    $('dadShareText').textContent=lines.join('\n');
+  }
+}
+function copyText(text){
+  if(!text||text.includes('まだありません')){toast('コピーする内容がありません');return;}
+  navigator.clipboard.writeText(text).then(()=>toast('コピーしました')).catch(()=>toast('コピーできない環境です'));
+}
+function copyDadShare(){copyText($('dadShareText').textContent);}
+
+function removeDoneImages(){
+  let count=0;
+  data.images.forEach(img=>{
+    const related=data.items.filter(i=>i.sourceImageId===img.id);
+    if(related.length && related.every(i=>i.done) && img.image){img.image='';count++;}
+  });
+  save();renderAll();toast('完了済み画像を'+count+'件削除しました');
+}
+function removeKeepImages(){
+  let count=0;
+  data.images.forEach(img=>{
+    const related=data.items.filter(i=>i.sourceImageId===img.id);
+    if(related.length && related.every(i=>i.mode==='見るだけ') && img.image){img.image='';count++;}
+  });
+  save();renderAll();toast('見るだけ保存の画像を'+count+'件削除しました');
+}
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='kodomo_yochui_v5_backup.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function catIconSVG(){
+  return `<svg class="animalIcon" viewBox="0 0 64 64" aria-hidden="true">
+    <path d="M17 21 L8 8 L10 28" fill="#f6d6b8" stroke="#6b5a52" stroke-width="2"/>
+    <path d="M47 21 L56 8 L54 28" fill="#f6d6b8" stroke="#6b5a52" stroke-width="2"/>
+    <circle cx="32" cy="35" r="22" fill="#f6d6b8" stroke="#6b5a52" stroke-width="2"/>
+    <circle cx="24" cy="32" r="2.5" fill="#6b5a52"/>
+    <circle cx="40" cy="32" r="2.5" fill="#6b5a52"/>
+    <path d="M29 40 Q32 43 35 40" fill="none" stroke="#6b5a52" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M18 38 H8 M18 41 H8 M46 38 H56 M46 41 H56" stroke="#6b5a52" stroke-width="2" stroke-linecap="round"/>
+    <path d="M30 36 L32 38 L34 36" fill="#e58c8c"/>
+  </svg>`;
+}
+function rabbitIconSVG(){
+  return `<svg class="animalIcon" viewBox="0 0 64 64" aria-hidden="true">
+    <ellipse cx="24" cy="15" rx="7" ry="16" fill="#fff" stroke="#8a8fa3" stroke-width="2"/>
+    <ellipse cx="40" cy="15" rx="7" ry="16" fill="#fff" stroke="#8a8fa3" stroke-width="2"/>
+    <ellipse cx="24" cy="16" rx="3" ry="10" fill="#f2c7d8"/>
+    <ellipse cx="40" cy="16" rx="3" ry="10" fill="#f2c7d8"/>
+    <circle cx="32" cy="39" r="20" fill="#fff" stroke="#8a8fa3" stroke-width="2"/>
+    <circle cx="25" cy="37" r="2.5" fill="#6b6f80"/>
+    <circle cx="39" cy="37" r="2.5" fill="#6b6f80"/>
+    <path d="M28 45 Q32 48 36 45" fill="none" stroke="#6b6f80" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="32" cy="42" r="2.8" fill="#e9a5ba"/>
+  </svg>`;
+}
+function iconForPerson(person){
+  if(person==='長女') return catIconSVG();
+  if(person==='次女') return rabbitIconSVG();
+  return '';
+}
+function personLabel(person){
+  if(!person)return '';
+  const icon=iconForPerson(person);
+  return `<span class="personTag">${icon}<span class="animalText">${escapeHTML(person)}</span></span>`;
+}
+function personPlain(person){
+  return person||'';
+}
+function debugLog(message, detail){
+  try{ console.info('[にゃんぴょん要注意スケジュール]', message, detail||''); }catch(e){}
+}
+
+function renderAll(){
+  renderImages();
+  renderAlerts();
+  renderToday();
+  renderShare();
+}
+debugLog('app loaded');
+load();
+</script>
+</body>
+</html>
