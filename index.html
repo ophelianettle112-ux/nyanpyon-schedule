@@ -290,6 +290,31 @@ textarea{min-height:80px;resize:vertical;line-height:1.55}
 .seg .animalIcon{width:20px;height:20px;}
 .personOptionIcon{width:20px;height:20px;vertical-align:middle;margin-right:4px;}
 
+
+.postSavePrompt{
+  display:none;
+  background:#ffffff;
+  border:2px solid #9fddb7;
+  border-radius:18px;
+  padding:14px;
+  margin:12px 0;
+  box-shadow:0 10px 24px rgba(47,168,102,.12);
+}
+.postSavePrompt.show{display:block}
+.postSavePrompt .promptTitle{
+  font-size:16px;
+  font-weight:950;
+  color:#176b3a;
+  margin-bottom:8px;
+}
+.drawerBottomClose{
+  position:sticky;
+  bottom:0;
+  background:linear-gradient(180deg,rgba(246,247,251,0),var(--bg) 28%);
+  padding-top:18px;
+  margin-top:8px;
+}
+
 </style>
 </head>
 <body>
@@ -433,6 +458,14 @@ textarea{min-height:80px;resize:vertical;line-height:1.55}
     </div>
     <div id="pickSourceInfo" class="small" style="margin-bottom:10px"></div>
     <div id="pickSavedMessage" class="successBanner">登録しました！</div>
+    <div id="postSavePrompt" class="postSavePrompt">
+      <div class="promptTitle">同じ画像から続けて登録しますか？</div>
+      <div class="small" style="margin-bottom:10px">同じプリント・スクショから、もう1件拾う場合はそのまま続けられます。</div>
+      <div class="btnrow">
+        <button class="btn" onclick="continueSameImage()">続けて登録</button>
+        <button class="btn secondary" onclick="closePickDrawer()">閉じる</button>
+      </div>
+    </div>
     <div id="pickImageWrap" class="topImage"></div>
 
     <div id="pickModeChooser">
@@ -494,6 +527,7 @@ textarea{min-height:80px;resize:vertical;line-height:1.55}
         <button class="chip" data-value="給食なし/弁当">給食なし/弁当</button>
         <button class="chip" data-value="お金">お金</button>
         <button class="chip" data-value="父共有">父共有</button>
+        <button class="chip" data-value="その他">その他</button>
       </div>
 
       <label class="caption">要注意の中身</label>
@@ -513,7 +547,7 @@ textarea{min-height:80px;resize:vertical;line-height:1.55}
 
     <div class="btnrow" style="margin-top:16px">
       <button id="savePickedBtn" class="btn full" onclick="savePickedItem()">この内容を保存</button>
-      <button class="btn secondary full" onclick="resetPickForm()">入力をリセット</button>
+      <button class="btn secondary full" onclick="manualResetPickForm()">入力をリセット</button>
     </div>
   </div>
 </div>
@@ -774,6 +808,7 @@ function openPickDrawer(id){
   setNoImageMode(false);
   const msg=$('pickSavedMessage');
   if(msg)msg.classList.remove('show');
+  hidePostSavePrompt();
   $('pickDrawer').classList.add('show');
 }
 function openNoImageAlert(){
@@ -785,10 +820,26 @@ function openNoImageAlert(){
   setNoImageMode(true);
   const msg=$('pickSavedMessage');
   if(msg)msg.classList.remove('show');
+  hidePostSavePrompt();
   $('pickDrawer').classList.add('show');
 }
 function closePickDrawer(){
+  hidePostSavePrompt();
+  const box=$('pickSavedMessage');
+  if(box)box.classList.remove('show');
   $('pickDrawer').classList.remove('show');
+}
+function hidePostSavePrompt(){
+  const prompt=$('postSavePrompt');
+  if(prompt)prompt.classList.remove('show');
+}
+function continueSameImage(){
+  hidePostSavePrompt();
+  const box=$('pickSavedMessage');
+  if(box)box.classList.remove('show');
+  resetPickForm();
+  setPickMode('要注意');
+  toast('続けて登録できます');
 }
 function setNoImageMode(isNoImage){
   const chooser=$('pickModeChooser');
@@ -801,6 +852,10 @@ function showPickSavedMessage(){
   if(box){
     box.textContent='登録しました！';
     box.classList.add('show');
+  }
+  const prompt=$('postSavePrompt');
+  if(prompt){
+    prompt.classList.toggle('show', !!activeImageId);
   }
   const big=$('successToastBig');
   if(big){
@@ -853,6 +908,12 @@ function resetPickForm(){
   document.querySelectorAll('#actionChips .chip').forEach(c=>c.classList.remove('active'));
   const btn=$('savePickedBtn');
   if(btn){btn.textContent='この内容を保存';btn.disabled=false;}
+}
+function manualResetPickForm(){
+  hidePostSavePrompt();
+  const box=$('pickSavedMessage');
+  if(box)box.classList.remove('show');
+  resetPickForm();
 }
 function getActions(){
   return Array.from($('actionChips').querySelectorAll('.chip.active')).map(c=>c.dataset.value);
