@@ -455,6 +455,16 @@ textarea{min-height:80px;resize:vertical;line-height:1.55}
   </div>
 
   <div class="card">
+    <div class="section"><h2>月間父共有まとめ</h2><span class="badge blue">表示中の月</span></div>
+    <p class="lead">カレンダーで表示している月のうち、父共有に入れた要注意だけを日程順にまとめます。</p>
+    <div id="monthlyDadShareText" class="copyarea">月間父共有まとめはまだありません。</div>
+    <div class="btnrow" style="margin-top:12px">
+      <button class="btn secondary" onclick="copyMonthlyDadShare()">月間まとめをコピー</button>
+    </div>
+  </div>
+
+
+  <div class="card">
     <div class="section"><h2>バックアップ・整理</h2></div>
     <div class="btnrow">
       <button class="btn secondary" onclick="exportJSON()">JSON書き出し</button>
@@ -1146,6 +1156,88 @@ function toggleTodayChecked(id,checked){
   if(item){item.todayChecked=!!checked;save();renderToday();}
 }
 
+
+function weekdayJPFromKey(key){
+  const d=new Date(key+'T00:00:00');
+  return ['日','月','火','水','木','金','土'][d.getDay()];
+}
+function dateLabelForItem(item){
+  const key=calendarKeyForItem(item);
+  if(key){
+    const d=new Date(key+'T00:00:00');
+    let suffix='';
+    if(item.when==='今日')suffix=' 今日';
+    if(item.when==='明日')suffix=' 明日';
+    return (d.getMonth()+1)+'/'+d.getDate()+'（'+weekdayJPFromKey(key)+'）'+suffix;
+  }
+  return item.when||'日付未定';
+}
+function personOrder(person){
+  if(person==='長女')return 1;
+  if(person==='次女')return 2;
+  if(person==='ふたり')return 3;
+  if(person==='家族')return 4;
+  return 9;
+}
+function scheduleSortValue(item){
+  const key=calendarKeyForItem(item);
+  if(key)return key;
+  const w=item.when||'';
+  if(w==='今週')return '9997-00-00';
+  if(w==='期限あり')return '9998-00-00';
+  if(w==='いつか')return '9999-00-00';
+  return '9999-99-99';
+}
+function sortBySchedule(items){
+  return [...items].sort((a,b)=>{
+    const ak=scheduleSortValue(a);
+    const bk=scheduleSortValue(b);
+    if(ak!==bk)return ak.localeCompare(bk);
+    const ap=personOrder(a.person);
+    const bp=personOrder(b.person);
+    if(ap!==bp)return ap-bp;
+    return String(a.createdAt||'').localeCompare(String(b.createdAt||''));
+  });
+}
+function isDadShareItem(item){
+  return item && item.mode==='要注意' && !item.done && ((item.actions||[]).includes('父共有') || !!item.dadTask);
+}
+function formatDadShareLine(item){
+  const person=item.person?item.person+'：':'';
+  const request=item.dadTask?' / お願い：'+item.dadTask:'';
+  return person+item.content+request;
+}
+function monthKeyOfCalendar(){
+  return calendarYear+'-'+pad2(calendarMonth+1);
+}
+function renderMonthlyDadShare(){
+  const box=$('monthlyDadShareText');
+  if(!box)return;
+  const monthKey=monthKeyOfCalendar();
+  const items=sortBySchedule(alertItems().filter(i=>{
+    if(!isDadShareItem(i))return false;
+    const key=calendarKeyForItem(i);
+    return key && key.slice(0,7)===monthKey;
+  }));
+  if(!items.length){
+    box.textContent='月間父共有まとめはまだありません。';
+    return;
+  }
+  const lines=['【にゃんぴょん要注意 '+calendarYear+'年'+(calendarMonth+1)+'月】'];
+  let lastLabel='';
+  items.forEach(i=>{
+    const label=dateLabelForItem(i);
+    if(label!==lastLabel){
+      lines.push('');
+      lines.push(label);
+      lastLabel=label;
+    }
+    lines.push('・'+formatDadShareLine(i));
+  });
+  box.textContent=lines.join('\n');
+}
+function copyMonthlyDadShare(){copyText($('monthlyDadShareText').textContent);}
+
 function renderShare(){
   const alexaItems=data.items.filter(i=>!i.done && i.alexaStatus==='未登録' && (i.mode==='Alexaだけ'||i.mode==='要注意'));
   if(!alexaItems.length){
@@ -1159,16 +1251,24 @@ function renderShare(){
       </div>`).join('');
   }
 
-  const dadItems=alertItems().filter(i=>!i.done && (i.actions.includes('父共有')||i.dadTask));
+  const dadItems=sortBySchedule(alertItems().filter(isDadShareItem));
   if(!dadItems.length){
     $('dadShareText').textContent='父共有に入れる内容はまだありません。';
   }else{
     const lines=['【子ども共有】'];
+    let lastLabel='';
     dadItems.forEach(i=>{
-      lines.push(`${i.when} ${i.person}：${i.content}${i.dadTask?' / お願い：'+i.dadTask:''}`);
+      const label=dateLabelForItem(i);
+      if(label!==lastLabel){
+        lines.push('');
+        lines.push(label);
+        lastLabel=label;
+      }
+      lines.push('・'+formatDadShareLine(i));
     });
     $('dadShareText').textContent=lines.join('\n');
   }
+  renderMonthlyDadShare();
 }
 function copyText(text){
   if(!text||text.includes('まだありません')){toast('コピーする内容がありません');return;}
@@ -1274,6 +1374,7 @@ function moveCalendarMonth(delta){
   if(calendarMonth<0){calendarMonth=11;calendarYear--;}
   if(calendarMonth>11){calendarMonth=0;calendarYear++;}
   renderCalendar();
+  renderShare();
 }
 function goCurrentMonth(){
   const now=new Date();
@@ -1281,6 +1382,7 @@ function goCurrentMonth(){
   calendarMonth=now.getMonth();
   selectedCalendarDate=dateKey(now);
   renderCalendar();
+  renderShare();
 }
 function selectCalendarDate(key){
   selectedCalendarDate=key;
